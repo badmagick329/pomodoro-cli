@@ -69,21 +69,15 @@ func (self *Config) createOrRead(configPath string) (err error) {
 	if err != nil {
 		if os.IsNotExist(err) {
 			os.Create(configPath)
-			self.WorkTime /= 60
-			self.BreakTime /= 60
-			self.LongBreakTime /= 60
+			self.toMinutes()
 			jsonCfg, err := json.MarshalIndent(self, "", "  ")
 			if err != nil {
-				self.WorkTime *= 60
-				self.BreakTime *= 60
-				self.LongBreakTime *= 60
+				self.toSeconds()
 				return err
 			}
 			err = ioutil.WriteFile(configPath, jsonCfg, 0644)
 			if err != nil {
-				self.WorkTime *= 60
-				self.BreakTime *= 60
-				self.LongBreakTime *= 60
+				self.toSeconds()
 				return err
 			}
 		} else {
@@ -93,10 +87,16 @@ func (self *Config) createOrRead(configPath string) (err error) {
 	defer file.Close()
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&self)
+	if err == nil {
+		self.toSeconds()
+	}
 	return
 }
 
-func (self *Config) ReadArgs(workTime, breakTime, longBreakTime, longBreakInterval, totalPomodoros int, autoStart bool) {
+func (self *Config) ReadArgs(
+	workTime, breakTime, longBreakTime, longBreakInterval, totalPomodoros int,
+	autoStart bool,
+) {
 	if workTime > 0 {
 		self.WorkTime = workTime * 60
 	}
@@ -115,4 +115,26 @@ func (self *Config) ReadArgs(workTime, breakTime, longBreakTime, longBreakInterv
 	if autoStart {
 		self.AutoStart = autoStart
 	}
+}
+
+func (self *Config) toMinutes() {
+	self.WorkTime /= 60
+	self.BreakTime /= 60
+	self.LongBreakTime /= 60
+}
+
+func maxInt(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func (self *Config) toSeconds() {
+	self.WorkTime = maxInt(self.WorkTime, 1)
+	self.BreakTime = maxInt(self.BreakTime, 1)
+	self.LongBreakTime = maxInt(self.LongBreakTime, 1)
+	self.WorkTime *= 60
+	self.BreakTime *= 60
+	self.LongBreakTime *= 60
 }
