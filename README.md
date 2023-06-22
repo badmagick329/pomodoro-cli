@@ -2,6 +2,8 @@
 
 A simple and customisable CLI pomodoro timer
 
+https://github.com/badmagick329/pomodoro-cli/assets/63713349/ac1f3ceb-f13f-43cf-9684-ac17becacb74
+
 ### Usage
 
 ```
