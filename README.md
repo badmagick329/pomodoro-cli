@@ -2,7 +2,7 @@
 
 A simple and customisable CLI pomodoro timer
 
-https://github.com/badmagick329/pomodoro-cli/assets/63713349/ac1f3ceb-f13f-43cf-9684-ac17becacb74
+https://github.com/badmagick329/pomodoro-cli/assets/63713349/2c3a1307-b565-4569-9af7-efd2b73cfc91
 
 ### Usage
 
