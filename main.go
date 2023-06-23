@@ -18,10 +18,13 @@ func main() {
 	var longBreakInterval *int = parser.Int("i", "interval", &argparse.Options{Required: false, Help: "Number of pomodoros before a long break"})
 	var totalPomodoros *int = parser.Int("n", "number", &argparse.Options{Required: false, Help: "Total number of pomodoros"})
 	var autoStart *bool = parser.Flag("a", "auto-start", &argparse.Options{Required: false, Help: "When a timer finishes, auto start the next timer"})
+	var testMode *bool = parser.Flag("t", "test", &argparse.Options{Required: false, Help: "Test mode, run through all timers in seconds"})
 	parser.Parse(os.Args)
 	cfg, _ := runner.NewConfig(CONFIG_PATH)
 	cfg.ReadArgs(*workTime, *breakTime, *longBreakTime, *longBreakInterval, *totalPomodoros, *autoStart)
-	// cfg := runner.TestConfig()
+	if *testMode {
+		cfg.TestMode()
+	}
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go runner.Run(&wg, &cfg)

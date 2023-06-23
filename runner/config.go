@@ -17,11 +17,11 @@ const (
 )
 
 const (
-	TEST_WORK_TIME           = 5
+	TEST_WORK_TIME           = 2
 	TEST_BREAK_TIME          = 1
 	TEST_LONG_BREAK_TIME     = 3
 	TEST_TOTAL_POMODOROS     = 5
-	TEST_LONG_BREAK_INTERVAL = 3
+	TEST_LONG_BREAK_INTERVAL = 2
 )
 
 type Config struct {
@@ -50,18 +50,12 @@ func NewConfig(configPath string) (cfg Config, err error) {
 	return
 }
 
-func TestConfig() (cfg Config) {
-	cfg = Config{
-		WorkSoundPath:     DEFAULT_WORK_SOUND_PATH,
-		BreakSoundPath:    DEFAULT_BREAK_SOUND_PATH,
-		WorkTime:          TEST_WORK_TIME,
-		BreakTime:         TEST_BREAK_TIME,
-		LongBreakTime:     TEST_LONG_BREAK_TIME,
-		LongBreakInterval: TEST_LONG_BREAK_INTERVAL,
-		AutoStart:         false,
-		TotalPomodoros:    TEST_TOTAL_POMODOROS,
-	}
-	return
+func (self *Config) TestMode() {
+	self.WorkTime = TEST_WORK_TIME
+	self.BreakTime = TEST_BREAK_TIME
+	self.LongBreakTime = TEST_LONG_BREAK_TIME
+	self.LongBreakInterval = TEST_LONG_BREAK_INTERVAL
+	self.TotalPomodoros = TEST_TOTAL_POMODOROS
 }
 
 func (self *Config) createOrRead(configPath string) (err error) {
