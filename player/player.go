@@ -16,30 +16,8 @@ type Player struct {
 }
 
 func NewPlayer(workSoundPath, breakSoundPath string) (p Player) {
-	var workExists, breakExists bool
-	if _, err := os.Stat(workSoundPath); os.IsNotExist(err) {
-		workExists = false
-	} else {
-		workExists = true
-	}
-	if _, err := os.Stat(breakSoundPath); os.IsNotExist(err) {
-		breakExists = false
-	} else {
-		breakExists = true
-	}
-	if workExists && breakExists {
-		p.workSoundPath = workSoundPath
-		p.breakSoundPath = breakSoundPath
-	} else if workExists {
-		p.workSoundPath = workSoundPath
-		p.breakSoundPath = workSoundPath
-	} else if breakExists {
-		p.workSoundPath = breakSoundPath
-		p.breakSoundPath = breakSoundPath
-	} else {
-		p.workSoundPath = ""
-		p.breakSoundPath = ""
-	}
+	p.workSoundPath = workSoundPath
+	p.breakSoundPath = breakSoundPath
 	return
 }
 

@@ -2,6 +2,7 @@ package runner
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"os"
 )
@@ -12,8 +13,7 @@ const (
 	DEFAULT_LONG_BREAK_TIME     = 15 * 60
 	DEFAULT_TOTAL_POMODOROS     = 8
 	DEFAULT_LONG_BREAK_INTERVAL = 4
-	DEFAULT_WORK_SOUND_PATH     = "bell.mp3"
-	DEFAULT_BREAK_SOUND_PATH    = "bell.mp3"
+	DEFAULT_SOUND_PATH          = "bell.mp3"
 )
 
 const (
@@ -35,10 +35,10 @@ type Config struct {
 	TotalPomodoros    int    `json:"total_pomodoros"`
 }
 
-func NewConfig(configPath string) (cfg Config, err error) {
+func NewConfig(configPath string) (cfg Config, errs []error) {
 	cfg = Config{
-		WorkSoundPath:     DEFAULT_WORK_SOUND_PATH,
-		BreakSoundPath:    DEFAULT_BREAK_SOUND_PATH,
+		WorkSoundPath:     DEFAULT_SOUND_PATH,
+		BreakSoundPath:    DEFAULT_SOUND_PATH,
 		WorkTime:          DEFAULT_WORK_TIME,
 		BreakTime:         DEFAULT_BREAK_TIME,
 		LongBreakTime:     DEFAULT_LONG_BREAK_TIME,
@@ -46,7 +46,10 @@ func NewConfig(configPath string) (cfg Config, err error) {
 		AutoStart:         false,
 		TotalPomodoros:    DEFAULT_TOTAL_POMODOROS,
 	}
-	err = cfg.createOrRead(configPath)
+	readErrs := cfg.createOrRead(configPath)
+	if len(readErrs) > 0 {
+		errs = append(errs, readErrs...)
+	}
 	return
 }
 
@@ -58,7 +61,7 @@ func (self *Config) TestMode() {
 	self.TotalPomodoros = TEST_TOTAL_POMODOROS
 }
 
-func (self *Config) createOrRead(configPath string) (err error) {
+func (self *Config) createOrRead(configPath string) (errs []error) {
 	file, err := os.Open(configPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -67,15 +70,18 @@ func (self *Config) createOrRead(configPath string) (err error) {
 			jsonCfg, err := json.MarshalIndent(self, "", "  ")
 			if err != nil {
 				self.toSeconds()
-				return err
+				errs = append(errs, err)
+				return
 			}
 			err = ioutil.WriteFile(configPath, jsonCfg, 0644)
 			if err != nil {
 				self.toSeconds()
-				return err
+				errs = append(errs, err)
+				return
 			}
 		} else {
-			return err
+			errs = append(errs, err)
+			return
 		}
 	}
 	defer file.Close()
@@ -83,6 +89,12 @@ func (self *Config) createOrRead(configPath string) (err error) {
 	err = decoder.Decode(&self)
 	if err == nil {
 		self.toSeconds()
+	} else {
+		errs = append(errs, err)
+	}
+	validErr := self.validateSoundPaths(configPath)
+	if validErr != nil {
+		errs = append(errs, validErr)
 	}
 	return
 }
@@ -108,6 +120,53 @@ func (self *Config) ReadArgs(
 	}
 	if autoStart {
 		self.AutoStart = autoStart
+	}
+}
+
+func (self *Config) validateSoundPaths(configPath string) (err error) {
+	invalidWorkPath := false
+	invalidBreakPath := false
+	defaultExists := false
+	_, e := os.Stat(DEFAULT_SOUND_PATH)
+	defaultExists = !os.IsNotExist(e)
+	if self.WorkSoundPath != "" {
+		_, e = os.Stat(self.WorkSoundPath)
+		invalidWorkPath = os.IsNotExist(e)
+	}
+	if self.BreakSoundPath != "" {
+		_, e = os.Stat(self.BreakSoundPath)
+		invalidBreakPath = os.IsNotExist(e)
+	}
+	if !(invalidWorkPath && invalidBreakPath) {
+		return
+	}
+	configMsg := "Ensure the path is correct in the " + configPath + " file.\n"
+	if (invalidWorkPath && invalidBreakPath) && defaultExists {
+		errMsg := "Sound files " + self.WorkSoundPath + " and " +
+			self.BreakSoundPath + " not found.\n"
+		errMsg += configMsg
+		errMsg += "Defaulting to " + DEFAULT_SOUND_PATH + "...\n"
+		err = errors.New(errMsg)
+		self.WorkSoundPath = DEFAULT_SOUND_PATH
+		self.BreakSoundPath = DEFAULT_SOUND_PATH
+		return
+	}
+	if (invalidWorkPath && invalidBreakPath) && !defaultExists {
+		errMsg := "Sound files " + self.WorkSoundPath + " and " +
+			self.BreakSoundPath + " not found.\n"
+		errMsg += configMsg
+		errMsg += "Default sound file " + DEFAULT_SOUND_PATH + " not found either.\n"
+		err = errors.New(errMsg)
+		self.WorkSoundPath = ""
+		self.BreakSoundPath = ""
+		return
+	}
+	if invalidWorkPath {
+		self.WorkSoundPath = self.BreakSoundPath
+		return
+	} else {
+		self.BreakSoundPath = self.WorkSoundPath
+		return
 	}
 }
 
