@@ -6,5 +6,8 @@
   "long_break_time": 15,
   "long_break_interval": 4,
   "auto_start": false,
-  "total_pomodoros": 8
+  "total_pomodoros": 8,
+  "pomodoro_char": "🍅",
+  "break_char": "☕️",
+  "empty_char": "➖"
 }

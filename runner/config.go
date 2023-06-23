@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
+	"unicode/utf8"
 )
 
 const (
@@ -14,6 +15,9 @@ const (
 	DEFAULT_TOTAL_POMODOROS     = 8
 	DEFAULT_LONG_BREAK_INTERVAL = 4
 	DEFAULT_SOUND_PATH          = "bell.mp3"
+	DEFAULT_WORK_CHAR           = "🍅"
+	DEFAULT_BREAK_CHAR          = "🍌"
+	DEFAULT_EMPTY_CHAR          = "➖"
 )
 
 const (
@@ -33,6 +37,9 @@ type Config struct {
 	LongBreakInterval int    `json:"long_break_interval"`
 	AutoStart         bool   `json:"auto_start"`
 	TotalPomodoros    int    `json:"total_pomodoros"`
+	WorkChar          string `json:"pomodoro_char"`
+	BreakChar         string `json:"break_char"`
+	EmptyChar         string `json:"empty_char"`
 }
 
 func NewConfig(configPath string) (cfg Config, errs []error) {
@@ -45,10 +52,21 @@ func NewConfig(configPath string) (cfg Config, errs []error) {
 		LongBreakInterval: DEFAULT_LONG_BREAK_INTERVAL,
 		AutoStart:         false,
 		TotalPomodoros:    DEFAULT_TOTAL_POMODOROS,
+		WorkChar:          DEFAULT_WORK_CHAR,
+		BreakChar:         DEFAULT_BREAK_CHAR,
+		EmptyChar:         DEFAULT_EMPTY_CHAR,
 	}
-	readErrs := cfg.createOrRead(configPath)
-	if len(readErrs) > 0 {
-		errs = append(errs, readErrs...)
+	err := cfg.createOrRead(configPath)
+	if err != nil {
+		errs = append(errs, err)
+	}
+	err = cfg.validateSoundPaths(configPath)
+	if err != nil {
+		errs = append(errs, err)
+	}
+	err = cfg.validateValues(configPath)
+	if err != nil {
+		errs = append(errs, err)
 	}
 	return
 }
@@ -61,7 +79,7 @@ func (self *Config) TestMode() {
 	self.TotalPomodoros = TEST_TOTAL_POMODOROS
 }
 
-func (self *Config) createOrRead(configPath string) (errs []error) {
+func (self *Config) createOrRead(configPath string) (err error) {
 	file, err := os.Open(configPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -70,18 +88,15 @@ func (self *Config) createOrRead(configPath string) (errs []error) {
 			jsonCfg, err := json.MarshalIndent(self, "", "  ")
 			if err != nil {
 				self.toSeconds()
-				errs = append(errs, err)
-				return
+				return err
 			}
 			err = ioutil.WriteFile(configPath, jsonCfg, 0644)
 			if err != nil {
 				self.toSeconds()
-				errs = append(errs, err)
-				return
+				return err
 			}
 		} else {
-			errs = append(errs, err)
-			return
+			return err
 		}
 	}
 	defer file.Close()
@@ -89,14 +104,8 @@ func (self *Config) createOrRead(configPath string) (errs []error) {
 	err = decoder.Decode(&self)
 	if err == nil {
 		self.toSeconds()
-	} else {
-		errs = append(errs, err)
 	}
-	validErr := self.validateSoundPaths(configPath)
-	if validErr != nil {
-		errs = append(errs, validErr)
-	}
-	return
+	return err
 }
 
 func (self *Config) ReadArgs(
@@ -121,6 +130,30 @@ func (self *Config) ReadArgs(
 	if autoStart {
 		self.AutoStart = autoStart
 	}
+}
+
+func (self *Config) validateValues(configPath string) (err error) {
+	self.WorkTime = maxInt(self.WorkTime, 1)
+	self.BreakTime = maxInt(self.BreakTime, 1)
+	self.LongBreakTime = maxInt(self.LongBreakTime, 1)
+	self.LongBreakInterval = maxInt(self.LongBreakInterval, 1)
+	self.TotalPomodoros = maxInt(self.TotalPomodoros, 1)
+	self.WorkChar = readChar(self.WorkChar, DEFAULT_WORK_CHAR)
+	self.BreakChar = readChar(self.BreakChar, DEFAULT_BREAK_CHAR)
+	self.EmptyChar = readChar(self.EmptyChar, DEFAULT_EMPTY_CHAR)
+	return
+}
+
+func readChar(str, def string) string {
+	if len(str) == 0 {
+		return def
+	}
+	r, _ := utf8.DecodeRuneInString(str)
+	if r == utf8.RuneError {
+		return def
+	}
+	str = string(r)
+	return str
 }
 
 func (self *Config) validateSoundPaths(configPath string) (err error) {

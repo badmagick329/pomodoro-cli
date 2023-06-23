@@ -8,6 +8,12 @@ import (
 	"time"
 )
 
+type Markers struct {
+	WorkChar  string
+	BreakChar string
+	EmptyChar string
+}
+
 func Run(wg *sync.WaitGroup, cfg *Config) {
 	p := player.NewPlayer(cfg.WorkSoundPath, cfg.BreakSoundPath)
 	tmr := timer.NewTimer(
@@ -18,15 +24,20 @@ func Run(wg *sync.WaitGroup, cfg *Config) {
 		cfg.LongBreakInterval,
 		cfg.AutoStart,
 	)
+	markers := &Markers{
+		WorkChar:  cfg.WorkChar,
+		BreakChar: cfg.BreakChar,
+		EmptyChar: cfg.EmptyChar,
+	}
 	ui := tcellui.NewTcellUI(0)
-	updateText(ui, tmr)
+	updateText(ui, tmr, markers)
 	addEventResponses(ui, tmr)
 	go ui.Listen(wg)
-	go updateLoop(tmr, ui)
+	go updateLoop(tmr, ui, markers)
 	go soundLoop(tmr, &p)
 }
 
-func updateLoop(tmr *timer.Timer, ui *tcellui.TcellUI) {
+func updateLoop(tmr *timer.Timer, ui *tcellui.TcellUI, markers *Markers) {
 	updateRate := 100 * time.Millisecond
 	threshold := 10
 	counter := 0
@@ -36,7 +47,7 @@ func updateLoop(tmr *timer.Timer, ui *tcellui.TcellUI) {
 			tmr.Tick()
 			counter = 0
 		}
-		updateText(ui, tmr)
+		updateText(ui, tmr, markers)
 		ui.AppState = int(tmr.TimerState())
 		time.Sleep(updateRate)
 		counter += 1
@@ -73,9 +84,9 @@ func soundLoop(tmr *timer.Timer, p *player.Player) {
 	}
 }
 
-func updateText(ui *tcellui.TcellUI, tmr *timer.Timer) {
-	ui.Text = pomoDoroString(tmr)
-	ui.Text += breakString(tmr)
+func updateText(ui *tcellui.TcellUI, tmr *timer.Timer, m *Markers) {
+	ui.Text = pomoDoroString(tmr, m.WorkChar, m.EmptyChar)
+	ui.Text += breakString(tmr, m.BreakChar)
 	state := tmr.TimerState()
 	ui.Text += timerText(state, tmr)
 	ui.Text += keyText(state)
@@ -159,22 +170,22 @@ func addEventResponses(ui *tcellui.TcellUI, tmr *timer.Timer) {
 	ui.AddEventResponse(key, startFunc)
 }
 
-func pomoDoroString(tmr *timer.Timer) string {
+func pomoDoroString(tmr *timer.Timer, wc, ec string) string {
 	pomodoros := ""
 	for i := 0; i < tmr.WorkIter(); i++ {
-		pomodoros += "🍅 "
+		pomodoros += wc + " "
 	}
 	remaining := ""
 	for i := 0; i < tmr.MaxWorkIter()-tmr.WorkIter(); i++ {
-		pomodoros += "➖ "
+		pomodoros += ec + " "
 	}
 	return "Pomodoros: " + pomodoros + remaining + "\n"
 }
 
-func breakString(tmr *timer.Timer) string {
+func breakString(tmr *timer.Timer, bc string) string {
 	remaining := ""
 	for i := 0; i < tmr.RemainingBreaks(); i++ {
-		remaining += "🍌 "
+		remaining += bc + " "
 	}
 	if remaining == "" {
 		return ""
