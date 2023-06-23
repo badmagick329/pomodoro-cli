@@ -16,8 +16,30 @@ type Player struct {
 }
 
 func NewPlayer(workSoundPath, breakSoundPath string) (p Player) {
-	p.workSoundPath = workSoundPath
-	p.breakSoundPath = breakSoundPath
+	var workExists, breakExists bool
+	if _, err := os.Stat(workSoundPath); os.IsNotExist(err) {
+		workExists = false
+	} else {
+		workExists = true
+	}
+	if _, err := os.Stat(breakSoundPath); os.IsNotExist(err) {
+		breakExists = false
+	} else {
+		breakExists = true
+	}
+	if workExists && breakExists {
+		p.workSoundPath = workSoundPath
+		p.breakSoundPath = breakSoundPath
+	} else if workExists {
+		p.workSoundPath = workSoundPath
+		p.breakSoundPath = workSoundPath
+	} else if breakExists {
+		p.workSoundPath = breakSoundPath
+		p.breakSoundPath = breakSoundPath
+	} else {
+		p.workSoundPath = ""
+		p.breakSoundPath = ""
+	}
 	return
 }
 
@@ -36,21 +58,20 @@ func playSound(soundPath string) error {
 	speaker.Play(beep.Seq(streamer, beep.Callback(func() {
 		done <- true
 	})))
-
 	<-done
 	return nil
 }
 
 func (self *Player) PlayBreak() {
-	err := playSound(self.breakSoundPath)
-	if err != nil {
-		playSound(self.workSoundPath)
+	if self.breakSoundPath == "" {
+		return
 	}
+	playSound(self.breakSoundPath)
 }
 
 func (self *Player) PlayWork() {
-	err := playSound(self.workSoundPath)
-	if err != nil {
-		playSound(self.breakSoundPath)
+	if self.workSoundPath == "" {
+		return
 	}
+	playSound(self.workSoundPath)
 }

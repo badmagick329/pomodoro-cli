@@ -118,15 +118,6 @@ func timerText(state timer.TimerState, tmr *timer.Timer) string {
 		) + "\n\n"
 	case timer.DONE:
 		totalWork := tmr.MaxWorkCounter() * tmr.MaxWorkIter()
-		// numBreaks := tmr.MaxWorkIter() - 1
-		// totalBreaks := 0
-		// for i := 0; i < numBreaks; i++ {
-		// 	if (i+1)%tmr.WorkChunk() == 0 {
-		// 		totalBreaks += tmr.MaxLbreakCounter()
-		// 	} else {
-		// 		totalBreaks += tmr.MaxSbreakCounter()
-		// 	}
-		// }
 		totalBreaks := tmr.BreaksLength()
 		text := "Done! You worked for " + tmr.TimeString(totalWork)
 		text += " and took breaks for " + tmr.TimeString(totalBreaks) + "\n\n"
