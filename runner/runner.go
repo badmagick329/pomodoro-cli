@@ -44,6 +44,7 @@ func updateLoop(tmr *timer.Timer, ui *tcellui.TcellUI) {
 }
 
 func soundLoop(tmr *timer.Timer, p *player.Player) {
+	updateRate := 100 * time.Millisecond
 	prevState := tmr.TimerState()
 	for {
 		if prevState == timer.WORK {
@@ -68,6 +69,7 @@ func soundLoop(tmr *timer.Timer, p *player.Player) {
 		} else {
 			prevState = tmr.TimerState()
 		}
+		time.Sleep(updateRate)
 	}
 }
 
