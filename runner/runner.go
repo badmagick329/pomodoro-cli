@@ -95,13 +95,13 @@ func updateText(ui *tcellui.TcellUI, tmr *timer.Timer, m *Markers) {
 func keyText(state timer.TimerState) string {
 	switch state {
 	case timer.WORK, timer.SBREAK, timer.LBREAK:
-    return "'p': Pause\n'k': Skip\n'q': Quit"
+		return "'p': Pause\n'k': Skip\n'q': Quit"
 	case timer.WORK_PAUSED, timer.SBREAK_PAUSED, timer.LBREAK_PAUSED:
-    return "'s': Resume\n'k': Skip\n'q': Quit"
+		return "'s': Resume\n'k': Skip\n'q': Quit"
 	case timer.PRE_SBREAK, timer.PRE_LBREAK:
-    return "'s': Start Break\n'k': Skip\n'q': Quit"
+		return "'s': Start Break\n'k': Skip\n'q': Quit"
 	case timer.PRE_WORK, timer.STOPPED:
-    return "'s': Start Work\n'k': Skip\n'q': Quit"
+		return "'s': Start Work\n'k': Skip\n'q': Quit"
 	case timer.DONE:
 		return "Press 'q' to quit"
 	default:
@@ -130,10 +130,8 @@ func timerText(state timer.TimerState, tmr *timer.Timer) string {
 			tmr.MaxLbreakCounter()-tmr.Counter(),
 		) + "\n\n"
 	case timer.DONE:
-		totalWork := tmr.MaxWorkCounter() * tmr.MaxWorkIter()
-		totalBreaks := tmr.BreaksLength()
-		text := "Done! You worked for " + tmr.TimeString(totalWork)
-		text += " and took breaks for " + tmr.TimeString(totalBreaks) + "\n\n"
+		text := "Done! You worked for " + tmr.TimeString(tmr.TotalWorkTime())
+		text += " and took breaks for " + tmr.TimeString(tmr.TotalBreakTime()) + "\n\n"
 		return text
 	default:
 		return ""
@@ -149,38 +147,38 @@ func addEventResponses(ui *tcellui.TcellUI, tmr *timer.Timer) {
 	pauseFunc := func() {
 		tmr.Pause()
 	}
-  skipFunc := func() {
-    tmr.Skip()
-  }
+	skipFunc := func() {
+		tmr.Skip()
+	}
 	ui.AddEventResponse(key, startFunc)
 	key = tcellui.Trigger{State: int(timer.PRE_WORK), Char: 's'}
 	ui.AddEventResponse(key, startFunc)
 	key = tcellui.Trigger{State: int(timer.PRE_WORK), Char: 'k'}
-  ui.AddEventResponse(key, skipFunc)
+	ui.AddEventResponse(key, skipFunc)
 	key = tcellui.Trigger{State: int(timer.WORK), Char: 'p'}
 	ui.AddEventResponse(key, pauseFunc)
-  key = tcellui.Trigger{State: int(timer.WORK), Char: 'k'}
-  ui.AddEventResponse(key, skipFunc)
+	key = tcellui.Trigger{State: int(timer.WORK), Char: 'k'}
+	ui.AddEventResponse(key, skipFunc)
 	key = tcellui.Trigger{State: int(timer.WORK_PAUSED), Char: 's'}
 	ui.AddEventResponse(key, startFunc)
 	key = tcellui.Trigger{State: int(timer.PRE_SBREAK), Char: 's'}
 	ui.AddEventResponse(key, startFunc)
-  key = tcellui.Trigger{State: int(timer.PRE_SBREAK), Char: 'k'}
-  ui.AddEventResponse(key, skipFunc)
+	key = tcellui.Trigger{State: int(timer.PRE_SBREAK), Char: 'k'}
+	ui.AddEventResponse(key, skipFunc)
 	key = tcellui.Trigger{State: int(timer.SBREAK), Char: 'p'}
 	ui.AddEventResponse(key, pauseFunc)
-  key = tcellui.Trigger{State: int(timer.SBREAK), Char: 'k'}
-  ui.AddEventResponse(key, skipFunc)
+	key = tcellui.Trigger{State: int(timer.SBREAK), Char: 'k'}
+	ui.AddEventResponse(key, skipFunc)
 	key = tcellui.Trigger{State: int(timer.SBREAK_PAUSED), Char: 's'}
 	ui.AddEventResponse(key, startFunc)
 	key = tcellui.Trigger{State: int(timer.PRE_LBREAK), Char: 's'}
 	ui.AddEventResponse(key, startFunc)
-  key = tcellui.Trigger{State: int(timer.PRE_LBREAK), Char: 'k'}
-  ui.AddEventResponse(key, skipFunc)
+	key = tcellui.Trigger{State: int(timer.PRE_LBREAK), Char: 'k'}
+	ui.AddEventResponse(key, skipFunc)
 	key = tcellui.Trigger{State: int(timer.LBREAK), Char: 'p'}
 	ui.AddEventResponse(key, pauseFunc)
-  key = tcellui.Trigger{State: int(timer.LBREAK), Char: 'k'}
-  ui.AddEventResponse(key, skipFunc)
+	key = tcellui.Trigger{State: int(timer.LBREAK), Char: 'k'}
+	ui.AddEventResponse(key, skipFunc)
 	key = tcellui.Trigger{State: int(timer.LBREAK_PAUSED), Char: 's'}
 	ui.AddEventResponse(key, startFunc)
 }

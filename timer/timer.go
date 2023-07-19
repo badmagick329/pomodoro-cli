@@ -53,6 +53,8 @@ type Timer struct {
 	maxWorkCounter   int // in seconds
 	maxSbreakCounter int // in seconds
 	maxLbreakCounter int // in seconds
+	totalWorkTime    int
+	totalBreakTime   int
 	workIter         int
 	maxWorkIter      int
 	workChunk        int
@@ -75,6 +77,8 @@ func NewTimer(
 		maxWorkCounter:   maxWorkCounter,
 		maxSbreakCounter: maxSbreakCounter,
 		maxLbreakCounter: maxLbreakCounter,
+		totalWorkTime:    0,
+		totalBreakTime:   0,
 		workIter:         0,
 		maxWorkIter:      maxWorkIter,
 		workChunk:        workChunk,
@@ -117,6 +121,7 @@ func (self *Timer) Tick() TimerState {
 			}
 		} else {
 			self.counter++
+      self.totalWorkTime++
 		}
 	case SBREAK:
 		if self.counter >= self.maxSbreakCounter {
@@ -130,6 +135,7 @@ func (self *Timer) Tick() TimerState {
 			}
 		} else {
 			self.counter++
+      self.totalBreakTime++
 		}
 	case LBREAK:
 		if self.counter >= self.maxLbreakCounter {
@@ -143,6 +149,7 @@ func (self *Timer) Tick() TimerState {
 			}
 		} else {
 			self.counter++
+      self.totalBreakTime++
 		}
 	}
 	return self.timerState
@@ -260,4 +267,12 @@ func (self *Timer) RemainingBreaks() int {
 
 func (self *Timer) BreaksLength() int {
 	return self.breaksLength
+}
+
+func (self *Timer) TotalWorkTime() int {
+  return self.totalWorkTime
+}
+
+func (self *Timer) TotalBreakTime() int {
+  return self.totalBreakTime
 }
