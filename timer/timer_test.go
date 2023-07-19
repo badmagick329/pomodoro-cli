@@ -134,3 +134,46 @@ func preBreakToPreWork(tmr *Timer, t *testing.T) {
 		}
 	}
 }
+
+func TestSkips(t *testing.T) {
+	maxWorkCounter := 1
+	maxSbreakCounter := 1
+	maxLbreakCounter := 1
+	maxWorkIter := 3
+	workChunk := 2
+	tmr := NewTimer(
+		maxWorkCounter,
+		maxSbreakCounter,
+		maxLbreakCounter,
+		maxWorkIter,
+		workChunk,
+		false,
+	)
+  if tmr.TimerState() != STOPPED {
+    t.Error("Expected state to be STOPPED. Got:", tmr.TimerState())
+  }
+  tmr.Start()
+  if tmr.TimerState() != WORK {
+    t.Error("Expected state to be WORK. Got:", tmr.TimerState())
+  }
+  tmr.Skip()
+  if tmr.TimerState() != PRE_SBREAK {
+    t.Error("Expected state to be PRE_SBREAK. Got:", tmr.TimerState())
+  }
+  tmr.Skip()
+  if tmr.TimerState() != PRE_WORK {
+    t.Error("Expected state to be PRE_WORK. Got:", tmr.TimerState())
+  }
+  tmr.Skip()
+  if tmr.TimerState() != PRE_LBREAK {
+    t.Error("Expected state to be PRE_LBREAK. Got:", tmr.TimerState())
+  }
+  tmr.Skip()
+  if tmr.TimerState() != PRE_WORK {
+    t.Error("Expected state to be PRE_WORK. Got:", tmr.TimerState())
+  }
+  tmr.Skip()
+  if tmr.TimerState() != DONE {
+    t.Error("Expected state to be DONE. Got:", tmr.TimerState())
+  }
+}

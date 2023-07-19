@@ -184,6 +184,33 @@ func (self *Timer) Reset() TimerState {
 	return self.timerState
 }
 
+func (self *Timer) Skip() TimerState {
+	switch self.timerState {
+	case PRE_WORK:
+		self.Start()
+		self.counter = self.maxWorkCounter
+		self.Tick()
+	case WORK:
+		self.counter = self.maxWorkCounter
+		self.Tick()
+	case PRE_SBREAK:
+		self.Start()
+		self.counter = self.maxSbreakCounter
+		self.Tick()
+	case SBREAK:
+		self.counter = self.maxSbreakCounter
+		self.Tick()
+	case PRE_LBREAK:
+		self.Start()
+		self.counter = self.maxLbreakCounter
+		self.Tick()
+	case LBREAK:
+		self.counter = self.maxLbreakCounter
+		self.Tick()
+	}
+	return self.timerState
+}
+
 func (self *Timer) TimerState() TimerState {
 	return self.timerState
 }
